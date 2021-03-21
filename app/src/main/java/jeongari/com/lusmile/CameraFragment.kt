@@ -1,6 +1,7 @@
 package jeongari.com.lusmile
 
 import android.graphics.Bitmap
+import android.graphics.PointF
 import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
@@ -12,9 +13,7 @@ import com.google.android.gms.tasks.OnFailureListener
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import com.google.firebase.ml.vision.face.FirebaseVisionFace
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
+import com.google.firebase.ml.vision.face.*
 import jeongari.com.camera.Camera2BasicFragment
 
 
@@ -35,7 +34,9 @@ class CameraFragment : Camera2BasicFragment() {
     }
     private val realTimeOpts: FirebaseVisionFaceDetectorOptions by lazy {
         FirebaseVisionFaceDetectorOptions.Builder()
-            .setPerformanceMode(FirebaseVisionFaceDetectorOptions.FAST)
+            .setPerformanceMode(FirebaseVisionFaceDetectorOptions.ACCURATE)
+            .setContourMode(FirebaseVisionFaceDetectorOptions.ALL_CONTOURS)
+            .setLandmarkMode(FirebaseVisionFaceDetectorOptions.ALL_LANDMARKS)
             .setClassificationMode(FirebaseVisionFaceDetectorOptions.ALL_CLASSIFICATIONS)
             .build()
     }
@@ -74,7 +75,7 @@ class CameraFragment : Camera2BasicFragment() {
                         showTextview("No Face deteced")
                     }
                     else{
-//                        showBoundingBox(faces)
+                        showPoints(faces)
                         showLottieAnimation(faces)
                     }
                 }
@@ -126,13 +127,25 @@ class CameraFragment : Camera2BasicFragment() {
         }
     }
 
-    private fun showBoundingBox(faces: List<FirebaseVisionFace>) {
+    private fun showPoints(faces: List<FirebaseVisionFace>) {
         activity?.runOnUiThread {
             drawView?.setImgSize(textureView!!.width, textureView!!.height)
         }
         for (face in faces) {
             val bounds = face.boundingBox
-            drawView!!.setDrawPoint(RectF(bounds), 1f)
+
+            val rotY = face.headEulerAngleY // Head is rotated to the right rotY degrees
+            val rotZ = face.headEulerAngleZ // Head is tilted sideways rotZ degrees
+
+            val all = face.getContour(FirebaseVisionFaceContour.ALL_POINTS).points
+            var p_all : ArrayList<PointF> = ArrayList<PointF>()
+            for (each in all){
+                p_all.add(PointF(each.x, each.y))
+            }
+//            drawView!!.setDrawPoint(RectF(bounds), p_all!! , 1f)
+//            showTextview(bounds.toShortString())
+
+            drawView!!.setDrawPoint(RectF(bounds), p_all , 1f)
             showTextview(bounds.toShortString())
         }
         drawView?.invalidate()

@@ -1,16 +1,10 @@
 package jeongari.com.camera
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Paint.Style.FILL
+import android.graphics.*
 import android.graphics.Paint.Style.STROKE
-import android.graphics.RectF
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
-import java.util.ArrayList
 
 class DrawView : View {
 
@@ -25,10 +19,18 @@ class DrawView : View {
     private var mImgWidth: Int = 0
     private var mImgHeight: Int = 0
 
+    private var p_all : ArrayList<PointF> = ArrayList<PointF>()
+
     private val mPaint: Paint by lazy {
         Paint(Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG).apply {
             style = STROKE
             strokeWidth = dip(2).toFloat()
+        }
+    }
+    private val pPaint: Paint by lazy {
+        Paint(Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG).apply {
+            style = STROKE
+            strokeWidth = dip(3).toFloat()
         }
     }
 
@@ -56,14 +58,21 @@ class DrawView : View {
 
     fun setDrawPoint(
         rectF: RectF,
+        all: ArrayList<PointF>,
         ratio: Float
     ) {
         this.rectF = null
+        this.p_all = ArrayList<PointF>()
 
         val left = rectF.left / ratio / mRatioX
         val right = rectF.right / ratio / mRatioX
         val bottom = rectF.bottom / ratio / mRatioY
         val top = rectF.top / ratio / mRatioY
+
+        for (each in all ){
+            val point = PointF(each.x/ ratio / mRatioX, each.y/ ratio / mRatioY )
+            this.p_all.add(point)
+        }
 
         this.rectF = RectF(left,top,right,bottom)
     }
@@ -93,6 +102,12 @@ class DrawView : View {
         if(rectF != null){
             mPaint.color = Color.parseColor("#86AF49")
             canvas.drawRect(rectF,mPaint)
+        }
+        if (p_all != null){
+            pPaint.color = Color.parseColor("#FF9933")
+            for (each in p_all!!){
+                canvas.drawPoint(each.x, each.y, pPaint)
+            }
         }
     }
 
